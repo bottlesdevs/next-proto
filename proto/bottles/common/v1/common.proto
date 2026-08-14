@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package bottles.common.v1;
+
+// Storefronts Bottles knows how to authenticate against and query.
+// Steam is intentionally included even though Bottles never authenticates
+// it directly — it is observed, not driven, via SteamLink in profiles.proto.
+enum Storefront {
+    STOREFRONT_UNSPECIFIED = 0;
+    STOREFRONT_STEAM = 1;
+    STOREFRONT_EPIC_GAMES = 2;
+    STOREFRONT_GOG = 3;
+    STOREFRONT_AMAZON_GAMES = 4;
+    STOREFRONT_EA_APP = 5;
+    STOREFRONT_UBISOFT_CONNECT = 6;
+    STOREFRONT_BATTLE_NET = 7;
+}
