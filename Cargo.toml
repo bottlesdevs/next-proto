@@ -1,8 +1,15 @@
 [package]
 name = "next-proto"
+description = "Generated protobuf/gRPC bindings shared across the Bottles Next workspace."
 version.workspace = true
+authors.workspace = true
 edition.workspace = true
 license.workspace = true
+repository = "https://github.com/bottlesdevs/next-proto/"
+homepage = ""
+categories = [""]
+keywords = [""]
+exclude = [""]
 publish = false
 
 [dependencies]
