@@ -3,6 +3,7 @@ syntax = "proto3";
 package bottles.store.v1;
 
 import "bottles/common/v1/common.proto";
+import "bottles/library/v1/library.proto";
 import "bottles/profiles/v1/profiles.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
@@ -35,6 +36,12 @@ service Store {
   // Returns this plugin's game library for the given profile. The
   // wire-level counterpart of StorePlugin::games().
   rpc ListGames(ListGamesRequest) returns (ListGamesResponse);
+
+  // Streams library changes for this plugin's single storefront as they're
+  // detected (polling-based where the storefront has no push API of its
+  // own). Library.WatchGames fans this out across every requested
+  // storefront and merges the results.
+  rpc WatchGames(WatchGamesRequest) returns (stream bottles.library.v1.GameEvent);
 }
 
 message BeginLoginRequest {
@@ -109,4 +116,8 @@ message ListGamesRequest {
 
 message ListGamesResponse {
   repeated bottles.common.v1.Game games = 1;
+}
+
+message WatchGamesRequest {
+  string profile_id = 1;
 }
