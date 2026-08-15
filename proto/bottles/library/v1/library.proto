@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package bottles.library.v1;
+
+import "bottles/common/v1/common.proto";
+
+service Library {
+  rpc ListGames(ListGamesRequest) returns (ListGamesResponse);
+
+  rpc WatchGames(WatchGamesRequest) returns (stream GameEvent);
+}
+
+message ListGamesRequest {
+  string profile_id = 1;
+  repeated bottles.common.v1.Storefront storefronts = 2;
+}
+
+message ListGamesResponse {
+  repeated bottles.common.v1.Game games = 1;
+}
+
+message WatchGamesRequest {
+  string profile_id = 1;
+  repeated bottles.common.v1.Storefront storefronts = 2;
+}
+
+message GameEvent {
+  oneof event {
+    GameAdded added = 1;
+    GameUpdated updated = 2;
+    GameRemoved removed = 3;
+  }
+}
+
+message GameAdded {
+  bottles.common.v1.Game game = 1;
+}
+
+message GameUpdated {
+  bottles.common.v1.Game game = 1;
+}
+
+message GameRemoved {
+  bottles.common.v1.Storefront storefront = 1;
+  string game_id = 2;
+}

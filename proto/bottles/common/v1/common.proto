@@ -2,16 +2,46 @@ syntax = "proto3";
 
 package bottles.common.v1;
 
-// Storefronts Bottles knows how to authenticate against and query.
-// Steam is intentionally included even though Bottles never authenticates
-// it directly — it is observed, not driven, via SteamLink in profiles.proto.
+import "google/protobuf/timestamp.proto";
+
+// Storefronts Bottles knows how to interact with.
 enum Storefront {
-    STOREFRONT_UNSPECIFIED = 0;
-    STOREFRONT_STEAM = 1;
-    STOREFRONT_EPIC_GAMES = 2;
-    STOREFRONT_GOG = 3;
-    STOREFRONT_AMAZON_GAMES = 4;
-    STOREFRONT_EA_APP = 5;
-    STOREFRONT_UBISOFT_CONNECT = 6;
-    STOREFRONT_BATTLE_NET = 7;
+  STOREFRONT_UNSPECIFIED = 0;
+  STOREFRONT_STEAM = 1;
+  STOREFRONT_EPIC_GAMES = 2;
+  STOREFRONT_GOG = 3;
+  STOREFRONT_AMAZON_GAMES = 4;
+  STOREFRONT_EA_APP = 5;
+  STOREFRONT_UBISOFT_CONNECT = 6;
+  STOREFRONT_BATTLE_NET = 7;
+}
+
+// Authentication state of a linked storefront account.
+enum AuthState {
+  AUTH_STATE_UNSPECIFIED = 0;
+  AUTH_STATE_INACTIVE = 1;
+  AUTH_STATE_ACTIVE = 2;
+  AUTH_STATE_STALE = 3;
+}
+
+// A storefront account linked to a profile.
+message LinkedAccount {
+  Storefront storefront = 1;
+  string account_display_name = 2;
+  string account_id = 3;
+  AuthState auth_state = 4;
+  google.protobuf.Timestamp linked_at = 5;
+  google.protobuf.Timestamp last_verified_at = 6;
+  optional google.protobuf.Timestamp expires_at = 7;
+}
+
+// A game owned by a user through a storefront.
+message Game {
+  string id = 1;
+  string title = 2;
+  Storefront storefront = 3;
+
+  optional string description = 4;
+  optional string icon_url = 5;
+  optional string cover_url = 6;
 }

@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package bottles.store.v1;
+
+import "bottles/common/v1/common.proto";
+import "bottles/profiles/v1/profiles.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+// StoreService — the storefront-agnostic login/session contract.
+//
+// This is the wire-level counterpart of the StorePlugin trait in next-core.
+// It knows nothing about Epic/GOG/Amazon specifically: every storefront's
+// login flow, however different, is expressed through the LoginChallenge
+// oneof below. Adding a new storefront never requires changing this file.
+service Store {
+  // Starts an interactive login for a storefront. The returned challenge
+  // tells the caller what to present to the user (a URL to open, a device
+  // code to display, etc). Does not block on user action.
+  rpc BeginLogin(BeginLoginRequest) returns (LoginChallenge);
+
+  // Completes a previously started login. For flows that need user input
+  // (an authorization code, an exchange token) it's passed here; for
+  // flows that resolve via polling or redirect capture, user_input is
+  // left empty and the server resolves it out-of-band.
+  rpc CompleteLogin(CompleteLoginRequest) returns (bottles.common.v1.LinkedAccount);
+
+  // Cheap, non-interactive: asks the owning plugin to verify/refresh the
+  // stored session for this storefront on this profile.
+  rpc RefreshSession(RefreshSessionRequest) returns (bottles.common.v1.LinkedAccount);
+
+  // Revokes the stored session for this storefront on this profile.
+  rpc RevokeSession(RevokeSessionRequest) returns (google.protobuf.Empty);
+
+  // Lists storefronts with a registered, working StorePlugin.
+  rpc ListAvailableStorefronts(google.protobuf.Empty) returns (ListAvailableStorefrontsResponse);
+}
+
+message BeginLoginRequest {
+  string profile_id = 1;
+  bottles.common.v1.Storefront storefront = 2;
+}
+
+message LoginChallenge {
+  string challenge_id = 1;
+  // Set only when BeginLogin itself already failed synchronously.
+  optional string error = 2;
+
+  oneof kind {
+    BrowserRedirectChallenge browser_redirect = 3;
+    DeviceCodeChallenge device_code = 4;
+    OAuthRedirectChallenge oauth_redirect = 5;
+  }
+}
+
+// Epic-style: open a URL in a browser, user completes login there and is
+// handed a code they paste back (or it's captured via local redirect).
+message BrowserRedirectChallenge {
+  string url = 1;
+  LoginInputKind expects = 2;
+}
+
+// Amazon-style: show a short code, user enters it on
+// verification_url from any device. Caller should poll CompleteLogin
+// with an empty user_input until it resolves or expires_in elapses.
+message DeviceCodeChallenge {
+  string verification_url = 1;
+  string user_code = 2;
+  uint32 expires_in_seconds = 3;
+  uint32 poll_interval_seconds = 4;
+}
+
+// GOG-style: standard OAuth2 authorization-code redirect against a
+// local loopback listener next-core stands up for the duration of the
+// challenge.
+message OAuthRedirectChallenge {
+  string auth_url = 1;
+  string redirect_uri = 2;
+}
+
+enum LoginInputKind {
+  LOGIN_INPUT_KIND_UNSPECIFIED = 0;
+  LOGIN_INPUT_KIND_AUTHORIZATION_CODE = 1;
+  LOGIN_INPUT_KIND_EXCHANGE_TOKEN = 2;
+  LOGIN_INPUT_KIND_NONE = 3;
+}
+
+message CompleteLoginRequest {
+  string challenge_id = 1;
+  string profile_id = 2;
+  bottles.common.v1.Storefront storefront = 3;
+  string user_input = 4;
+}
+
+message RefreshSessionRequest {
+  string profile_id = 1;
+  bottles.common.v1.Storefront storefront = 2;
+}
+
+message RevokeSessionRequest {
+  string profile_id = 1;
+  bottles.common.v1.Storefront storefront = 2;
+}
+
+message ListAvailableStorefrontsResponse {
+  repeated bottles.common.v1.Storefront storefronts = 1;
+}
