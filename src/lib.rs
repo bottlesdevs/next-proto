@@ -18,6 +18,11 @@ pub mod bottles {
             tonic::include_proto!("bottles.store.v1");
         }
     }
+    pub mod registry {
+        pub mod v1 {
+            tonic::include_proto!("bottles.registry.v1");
+        }
+    }
     pub mod library {
         pub mod v1 {
             tonic::include_proto!("bottles.library.v1");

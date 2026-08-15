@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package bottles.registry.v1;
+
+import "bottles/common/v1/common.proto";
+import "google/protobuf/empty.proto";
+
+// Registry — lets out-of-process plugins announce themselves and lets
+// core resolve which endpoint owns a given Storefront value at runtime.
+//
+// Exactly one plugin may own a given Storefront at a time. There is no
+// priority/preference mechanism: the first plugin to successfully
+// register for a Storefront owns it until it deregisters or is reaped
+// for missed heartbeats, and any later RegisterPlugin call for the
+// same Storefront is rejected outright (see RegisterPluginResponse).
+// A human picking between competing third-party plugins for the same
+// storefront, if that's ever needed, is a settings/UI-level concern,
+// not something this service arbitrates.
+service Registry {
+  // Called once by a plugin process on startup. Fails if the
+  // requested Storefront already has a live owner.
+  rpc RegisterPlugin(RegisterPluginRequest) returns (RegisterPluginResponse);
+
+  // Called periodically by a registered plugin to prove liveness.
+  // Missing heartbeats past a server-configured timeout frees the
+  // Storefront for a new RegisterPlugin call.
+  rpc Heartbeat(HeartbeatRequest) returns (google.protobuf.Empty);
+
+  // Explicit, graceful release of ownership (plugin shutting down).
+  rpc DeregisterPlugin(DeregisterPluginRequest) returns (google.protobuf.Empty);
+
+  // Core calls this to find where to dial a Storefront's plugin.
+  rpc ResolvePlugin(ResolvePluginRequest) returns (ResolvePluginResponse);
+
+  // Core calls this to enumerate everything currently registered,
+  // e.g. to populate available storefronts/emulators in the UI.
+  rpc ListPlugins(google.protobuf.Empty) returns (ListPluginsResponse);
+}
+
+message RegisterPluginRequest {
+  bottles.common.v1.Storefront storefront = 1;
+  // Where core should dial this plugin's Store service.
+  string endpoint = 2;
+  string plugin_version = 3;
+}
+
+message RegisterPluginResponse {
+  // Opaque token the plugin must present on Heartbeat/Deregister
+  // calls for this registration. Absent if registration was rejected.
+  optional string registration_token = 1;
+
+  RegisterOutcome outcome = 2;
+
+  // Set only when outcome == REGISTER_OUTCOME_ALREADY_OWNED.
+  optional RegisteredPlugin current_owner = 3;
+}
+
+enum RegisterOutcome {
+  REGISTER_OUTCOME_UNSPECIFIED = 0;
+  REGISTER_OUTCOME_ACCEPTED = 1;
+  REGISTER_OUTCOME_ALREADY_OWNED = 2;
+}
+
+message HeartbeatRequest {
+  string registration_token = 1;
+}
+
+message DeregisterPluginRequest {
+  string registration_token = 1;
+}
+
+message ResolvePluginRequest {
+  bottles.common.v1.Storefront storefront = 1;
+}
+
+message ResolvePluginResponse {
+  // Unset if no plugin currently owns this Storefront.
+  optional string endpoint = 1;
+  optional string plugin_version = 2;
+}
+
+message ListPluginsResponse {
+  repeated RegisteredPlugin plugins = 1;
+}
+
+message RegisteredPlugin {
+  bottles.common.v1.Storefront storefront = 1;
+  string endpoint = 2;
+  string plugin_version = 3;
+}

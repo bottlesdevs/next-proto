@@ -1,7 +1,7 @@
 use std::{env, path::PathBuf};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("cargo:rerun-if-changed=proto/winebridge.proto");
+    println!("cargo:rerun-if-changed=proto/");
     let out_dir = PathBuf::from(env::var("OUT_DIR")?);
     tonic_prost_build::configure()
         .extern_path(".google.protobuf.Timestamp", "::prost_wkt_types::Timestamp")
@@ -16,6 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "proto/bottles/profiles/v1/profiles.proto",
                 "proto/bottles/store/v1/store.proto",
                 "proto/bottles/library/v1/library.proto",
+                "proto/bottles/registry/v1/registry.proto",
                 "proto/bottles/common/v1/common.proto",
             ],
             &["proto/"],

@@ -32,8 +32,9 @@ service Store {
   // Revokes the stored session for this storefront on this profile.
   rpc RevokeSession(RevokeSessionRequest) returns (google.protobuf.Empty);
 
-  // Lists storefronts with a registered, working StorePlugin.
-  rpc ListAvailableStorefronts(google.protobuf.Empty) returns (ListAvailableStorefrontsResponse);
+  // Returns this plugin's game library for the given profile. The
+  // wire-level counterpart of StorePlugin::games().
+  rpc ListGames(ListGamesRequest) returns (ListGamesResponse);
 }
 
 message BeginLoginRequest {
@@ -102,6 +103,10 @@ message RevokeSessionRequest {
   bottles.common.v1.Storefront storefront = 2;
 }
 
-message ListAvailableStorefrontsResponse {
-  repeated bottles.common.v1.Storefront storefronts = 1;
+message ListGamesRequest {
+  string profile_id = 1;
+}
+
+message ListGamesResponse {
+  repeated bottles.common.v1.Game games = 1;
 }
