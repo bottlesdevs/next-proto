@@ -41,6 +41,11 @@ service Profile {
 
   rpc UnlinkAccount(UnlinkAccountRequest) returns (UserProfile);
 
+  // Completes an interactive login (started via Store.BeginLogin) and
+  // attaches the resulting LinkedAccount to the profile, replacing any
+  // existing link for the same storefront.
+  rpc LinkAccount(LinkAccountRequest) returns (UserProfile);
+
   rpc LinkSteamAccount(LinkSteamAccountRequest) returns (UserProfile);
 
   rpc UnlinkSteamAccount(UnlinkSteamAccountRequest) returns (UserProfile);
@@ -104,6 +109,13 @@ enum ActivationOutcome {
 message UnlinkAccountRequest {
   string profile_id = 1;
   bottles.common.v1.Storefront storefront = 2;
+}
+
+message LinkAccountRequest {
+  string profile_id = 1;
+  string challenge_id = 2;
+  bottles.common.v1.Storefront storefront = 3;
+  string user_input = 4;
 }
 
 message LinkSteamAccountRequest {
