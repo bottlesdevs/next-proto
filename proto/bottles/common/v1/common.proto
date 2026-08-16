@@ -44,4 +44,18 @@ message Game {
   optional string description = 4;
   optional string icon_url = 5;
   optional string cover_url = 6;
+
+  // Wide hero/banner art, distinct from cover_url's portrait crop.
+  optional string background_url = 7;
+  optional string developer = 8;
+  optional string publisher = 9;
+  // Not every storefront exposes real genre data (e.g. Epic's
+  // "categories" are store taxonomy, not genres) — empty when unknown,
+  // never populated with a non-genre stand-in.
+  repeated string genres = 10;
+  optional google.protobuf.Timestamp release_date = 11;
+  // Storefront-native rating (age/content rating, aggregate review
+  // score, etc.), left as free text since rating systems aren't
+  // consistent across storefronts.
+  optional string rating = 12;
 }
