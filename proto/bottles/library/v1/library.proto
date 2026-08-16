@@ -11,11 +11,8 @@ service Library {
   rpc WatchGames(WatchGamesRequest) returns (stream GameEvent);
 
   // Downloads a game via the owning storefront plugin's
-  // Store.GetInstallManifest and reports progress as it goes. Resolving
-  // "where do the installed files actually live" (a Bottle/prefix) isn't
-  // implemented yet — see bottles.bottle.v1 — so today this installs into
-  // a Library-managed directory instead, and InstallState.bottle_id stays
-  // unset until that lands.
+  // Store.GetInstallManifest and writes it directly into the given
+  // Bottle's prefix (bottles.bottle.v1), reporting progress as it goes.
   rpc InstallGame(InstallGameRequest) returns (stream InstallGameEvent);
 
   // Cancels an install in progress. A no-op, not an error, if nothing is
@@ -66,6 +63,11 @@ message InstallGameRequest {
   string profile_id = 1;
   bottles.common.v1.Storefront storefront = 2;
   string game_id = 3;
+  // Which Bottle to install into. Required for InstallGame; ignored by
+  // CancelInstall (an in-flight install is already tied to one) and by
+  // UninstallGame once the InstallRecord already names it — both reuse
+  // this message for its (profile_id, storefront, game_id) identity.
+  string bottle_id = 4;
 }
 
 message InstallGameEvent {
