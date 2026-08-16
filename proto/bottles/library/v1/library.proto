@@ -3,11 +3,28 @@ syntax = "proto3";
 package bottles.library.v1;
 
 import "bottles/common/v1/common.proto";
+import "google/protobuf/empty.proto";
 
 service Library {
   rpc ListGames(ListGamesRequest) returns (ListGamesResponse);
 
   rpc WatchGames(WatchGamesRequest) returns (stream GameEvent);
+
+  // Downloads a game via the owning storefront plugin's
+  // Store.GetInstallManifest and reports progress as it goes. Resolving
+  // "where do the installed files actually live" (a Bottle/prefix) isn't
+  // implemented yet — see bottles.bottle.v1 — so today this installs into
+  // a Library-managed directory instead, and InstallState.bottle_id stays
+  // unset until that lands.
+  rpc InstallGame(InstallGameRequest) returns (stream InstallGameEvent);
+
+  // Cancels an install in progress. A no-op, not an error, if nothing is
+  // installing for this game.
+  rpc CancelInstall(InstallGameRequest) returns (google.protobuf.Empty);
+
+  // Removes a previously installed game's files and clears its install
+  // record. A no-op, not an error, if it isn't installed.
+  rpc UninstallGame(InstallGameRequest) returns (google.protobuf.Empty);
 }
 
 message ListGamesRequest {
@@ -43,4 +60,24 @@ message GameUpdated {
 message GameRemoved {
   bottles.common.v1.Storefront storefront = 1;
   string game_id = 2;
+}
+
+message InstallGameRequest {
+  string profile_id = 1;
+  bottles.common.v1.Storefront storefront = 2;
+  string game_id = 3;
+}
+
+message InstallGameEvent {
+  oneof event {
+    InstallProgress progress = 1;
+    bottles.common.v1.InstallState done = 2;
+  }
+}
+
+message InstallProgress {
+  string current_file = 1;
+  uint64 bytes_downloaded = 2;
+  optional uint64 total_bytes = 3;
+  double bytes_per_second = 4;
 }

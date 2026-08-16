@@ -18,6 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "proto/bottles/library/v1/library.proto",
                 "proto/bottles/registry/v1/registry.proto",
                 "proto/bottles/common/v1/common.proto",
+                "proto/bottles/bottle/v1/bottle.proto",
             ],
             &["proto/"],
         )?;

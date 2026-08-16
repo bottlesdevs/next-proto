@@ -28,6 +28,11 @@ pub mod bottles {
             tonic::include_proto!("bottles.library.v1");
         }
     }
+    pub mod bottle {
+        pub mod v1 {
+            tonic::include_proto!("bottles.bottle.v1");
+        }
+    }
 }
 
 pub const FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("bottles_descriptor");

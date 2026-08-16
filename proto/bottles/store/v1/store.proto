@@ -42,6 +42,44 @@ service Store {
   // own). Library.WatchGames fans this out across every requested
   // storefront and merges the results.
   rpc WatchGames(WatchGamesRequest) returns (stream bottles.library.v1.GameEvent);
+
+  // Resolves what Library.InstallGame needs to actually fetch this game:
+  // a flat list of files with ready-to-download URLs. Called once per
+  // user-initiated install, not per listing, so plugins are free to hit
+  // whatever storefront endpoint they need without the request-volume
+  // concerns ListGames has.
+  //
+  // Every storefront's download system works differently under the hood
+  // (GOG: a fixed manual-download-link list; Epic: chunked CDN manifests),
+  // but Library only needs "where do the bytes come from" — this
+  // flattens that difference the same way LoginChallenge flattens login
+  // flows. File URLs may be short-lived; a plugin that can't guarantee a
+  // URL survives a paused-and-resumed download should have InstallGame
+  // call GetInstallManifest again before resuming rather than caching it
+  // long-term. Storefronts without this capability yet return
+  // UNIMPLEMENTED.
+  rpc GetInstallManifest(GetInstallManifestRequest) returns (InstallManifest);
+}
+
+message GetInstallManifestRequest {
+  string profile_id = 1;
+  string game_id = 2;
+}
+
+message InstallManifest {
+  string version = 1;
+  optional uint64 install_size_bytes = 2;
+  repeated InstallFile files = 3;
+}
+
+message InstallFile {
+  // Destination path relative to the install directory, e.g.
+  // "redist/directx/dxsetup.exe".
+  string relative_path = 1;
+  string download_url = 2;
+  // Approximate; not every storefront reports exact byte counts up
+  // front (GOG's is a human string like "1.2 GB", parsed best-effort).
+  optional uint64 size_bytes = 3;
 }
 
 message BeginLoginRequest {

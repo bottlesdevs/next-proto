@@ -58,4 +58,18 @@ message Game {
   // score, etc.), left as free text since rating systems aren't
   // consistent across storefronts.
   optional string rating = 12;
+
+  // Local install status. Unlike every other field on this message,
+  // this isn't catalog data from the storefront — it's populated by
+  // Library from its own installs record, keyed by (profile_id,
+  // storefront, id). Unset (not just installed=false) when Library
+  // doesn't govern installs for this game.
+  optional InstallState install_state = 13;
+}
+
+message InstallState {
+  bool installed = 1;
+  optional string bottle_id = 2;
+  optional string installed_version = 3;
+  optional uint64 install_size_bytes = 4;
 }
