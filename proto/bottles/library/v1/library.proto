@@ -26,7 +26,6 @@ service Library {
 
 message ListGamesRequest {
   string profile_id = 1;
-  repeated bottles.common.v1.Storefront storefronts = 2;
 }
 
 message ListGamesResponse {
@@ -35,7 +34,6 @@ message ListGamesResponse {
 
 message WatchGamesRequest {
   string profile_id = 1;
-  repeated bottles.common.v1.Storefront storefronts = 2;
 }
 
 message GameEvent {
