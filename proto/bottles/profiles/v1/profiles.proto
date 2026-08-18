@@ -3,6 +3,7 @@ syntax = "proto3";
 package bottles.profiles.v1;
 
 import "bottles/common/v1/common.proto";
+import "bottles/steam/v1/steam.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -13,15 +14,10 @@ message UserProfile {
 
   repeated bottles.common.v1.LinkedAccount accounts = 4;
 
-  optional SteamLink steam_link = 5;
+  optional bottles.steam.v1.SteamLink steam_link = 5;
 
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp last_activated_at = 7;
-}
-
-message SteamLink {
-  string steam_id64 = 1;
-  string account_name = 2;
 }
 
 service Profile {
@@ -39,20 +35,7 @@ service Profile {
 
   rpc ActivateProfile(ActivateProfileRequest) returns (ActivateProfileResponse);
 
-  rpc UnlinkAccount(UnlinkAccountRequest) returns (UserProfile);
-
-  // Completes an interactive login (started via Store.BeginLogin) and
-  // attaches the resulting LinkedAccount to the profile, replacing any
-  // existing link for the same storefront.
-  rpc LinkAccount(LinkAccountRequest) returns (UserProfile);
-
-  rpc LinkSteamAccount(LinkSteamAccountRequest) returns (UserProfile);
-
-  rpc UnlinkSteamAccount(UnlinkSteamAccountRequest) returns (UserProfile);
-
   rpc WatchActiveProfile(google.protobuf.Empty) returns (stream ProfileEvent);
-
-  rpc WatchSteamSessions(google.protobuf.Empty) returns (stream SteamSessionEvent);
 }
 
 message ListProfilesResponse {
@@ -106,38 +89,10 @@ enum ActivationOutcome {
   ACTIVATION_OUTCOME_NETWORK_ERROR = 5;
 }
 
-message UnlinkAccountRequest {
-  string profile_id = 1;
-  bottles.common.v1.Storefront storefront = 2;
-}
-
-message LinkAccountRequest {
-  string profile_id = 1;
-  string challenge_id = 2;
-  bottles.common.v1.Storefront storefront = 3;
-  string user_input = 4;
-}
-
-message LinkSteamAccountRequest {
-  string profile_id = 1;
-  string steam_id64 = 2;
-  bool auto_activate = 3;
-}
-
-message UnlinkSteamAccountRequest {
-  string profile_id = 1;
-}
-
 message ProfileEvent {
   oneof event {
     UserProfile activated = 1;
     UserProfile updated = 2;
     string deleted_profile_id = 3;
   }
-}
-
-message SteamSessionEvent {
-  string steam_id64 = 1;
-  string account_name = 2;
-  bool is_active = 3;
 }

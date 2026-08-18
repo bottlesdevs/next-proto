@@ -1,20 +1,19 @@
 syntax = "proto3";
 
-package bottles.store.v1;
+package bottles.plugin.v1;
 
 import "bottles/common/v1/common.proto";
 import "bottles/library/v1/library.proto";
-import "bottles/profiles/v1/profiles.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-// StoreService — the storefront-agnostic login/session contract.
+// PluginService — the storefront-agnostic login/session contract.
 //
 // This is the wire-level counterpart of the StorePlugin trait in next-core.
 // It knows nothing about Epic/GOG/Amazon specifically: every storefront's
 // login flow, however different, is expressed through the LoginChallenge
 // oneof below. Adding a new storefront never requires changing this file.
-service Store {
+service Plugin {
   // Starts an interactive login for a storefront. The returned challenge
   // tells the caller what to present to the user (a URL to open, a device
   // code to display, etc). Does not block on user action.
@@ -43,24 +42,7 @@ service Store {
   // storefront and merges the results.
   rpc WatchGames(WatchGamesRequest) returns (stream bottles.library.v1.GameEvent);
 
-  // Resolves what Library.InstallGame needs to actually fetch this game:
-  // a flat list of files, each as one or more content-addressed chunks
-  // with their own download URLs. Called once per user-initiated
-  // install, not per listing, so plugins are free to hit whatever
-  // storefront endpoint they need without the request-volume concerns
-  // ListGames has.
-  //
-  // Modeled on how GOG (Galaxy builds/depot v2) and Epic (chunked CDN
-  // manifests) actually distribute games — neither ever runs an
-  // installer; both are "download content-defined chunks, write them at
-  // their file's byte offset". Library only needs "where do the
-  // bytes come from and how do they reassemble" — this flattens that
-  // difference the same way LoginChallenge flattens login flows. Chunk
-  // URLs may be short-lived; a plugin that can't guarantee a URL
-  // survives a paused-and-resumed download should have InstallGame call
-  // GetInstallManifest again before resuming rather than caching it
-  // long-term. Storefronts without this capability yet return
-  // UNIMPLEMENTED.
+  // Resolves what Library.InstallGame needs to actually fetch this game.
   rpc GetInstallManifest(GetInstallManifestRequest) returns (InstallManifest);
 }
 

@@ -14,7 +14,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &[
                 "proto/winebridge.proto",
                 "proto/bottles/profiles/v1/profiles.proto",
-                "proto/bottles/store/v1/store.proto",
+                "proto/bottles/plugin/v1/plugin.proto",
+                "proto/bottles/steam/v1/steam.proto",
+                "proto/bottles/accounts/v1/accounts.proto",
                 "proto/bottles/library/v1/library.proto",
                 "proto/bottles/registry/v1/registry.proto",
                 "proto/bottles/common/v1/common.proto",

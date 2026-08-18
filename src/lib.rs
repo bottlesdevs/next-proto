@@ -13,9 +13,19 @@ pub mod bottles {
             tonic::include_proto!("bottles.profiles.v1");
         }
     }
-    pub mod store {
+    pub mod plugin {
         pub mod v1 {
-            tonic::include_proto!("bottles.store.v1");
+            tonic::include_proto!("bottles.plugin.v1");
+        }
+    }
+    pub mod steam {
+        pub mod v1 {
+            tonic::include_proto!("bottles.steam.v1");
+        }
+    }
+    pub mod accounts {
+        pub mod v1 {
+            tonic::include_proto!("bottles.accounts.v1");
         }
     }
     pub mod registry {

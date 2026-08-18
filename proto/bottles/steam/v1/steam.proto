@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package bottles.steam.v1;
+
+import "google/protobuf/empty.proto";
+
+service Steam {
+  rpc LinkSteamAccount(LinkSteamAccountRequest) returns (SteamLink);
+
+  rpc UnlinkSteamAccount(UnlinkSteamAccountRequest) returns (google.protobuf.Empty);
+
+  rpc WatchSteamSessions(google.protobuf.Empty) returns (stream SteamSessionEvent);
+}
+
+message SteamLink {
+  string steam_id64 = 1;
+  string account_name = 2;
+}
+
+message LinkSteamAccountRequest {
+  string profile_id = 1;
+  string steam_id64 = 2;
+  bool auto_activate = 3;
+}
+
+message UnlinkSteamAccountRequest {
+  string profile_id = 1;
+}
+
+message SteamSessionEvent {
+  string steam_id64 = 1;
+  string account_name = 2;
+  bool is_active = 3;
+}

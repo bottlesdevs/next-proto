@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package bottles.accounts.v1;
+
+import "bottles/common/v1/common.proto";
+import "google/protobuf/empty.proto";
+
+service Accounts {
+  // Completes an interactive login (started via Plugin.BeginLogin) and
+  // attaches the resulting LinkedAccount to the profile, replacing any
+  // existing link for the same storefront.
+  rpc LinkAccount(LinkAccountRequest) returns (bottles.common.v1.LinkedAccount);
+
+  rpc UnlinkAccount(UnlinkAccountRequest) returns (google.protobuf.Empty);
+}
+
+message LinkAccountRequest {
+  string profile_id = 1;
+  string challenge_id = 2;
+  bottles.common.v1.Storefront storefront = 3;
+  string user_input = 4;
+}
+
+message UnlinkAccountRequest {
+  string profile_id = 1;
+  bottles.common.v1.Storefront storefront = 2;
+}
