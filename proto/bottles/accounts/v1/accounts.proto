@@ -9,14 +9,14 @@ service Accounts {
   // Completes an interactive login (started via Plugin.BeginLogin) and
   // attaches the resulting LinkedAccount to the profile, replacing any
   // existing link for the same storefront.
-  rpc LinkAccount(LinkAccountRequest) returns (bottles.common.v1.LinkedAccount);
+  rpc LinkProfile(LinkProfileRequest) returns (bottles.common.v1.LinkedAccount);
 
   rpc RefreshAccount(RefreshAccountRequest) returns (bottles.common.v1.LinkedAccount);
 
-  rpc UnlinkAccount(UnlinkAccountRequest) returns (google.protobuf.Empty);
+  rpc UnlinkProfile(UnlinkProfileRequest) returns (google.protobuf.Empty);
 }
 
-message LinkAccountRequest {
+message LinkProfileRequest {
   string profile_id = 1;
   string challenge_id = 2;
   bottles.common.v1.Storefront storefront = 3;
@@ -28,7 +28,7 @@ message RefreshAccountRequest {
   bottles.common.v1.Storefront storefront = 2;
 }
 
-message UnlinkAccountRequest {
+message UnlinkProfileRequest {
   string profile_id = 1;
   bottles.common.v1.Storefront storefront = 2;
 }

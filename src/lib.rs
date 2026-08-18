@@ -1,3 +1,7 @@
+use std::fmt::Display;
+
+use crate::bottles::common::v1::Storefront;
+
 pub mod winebridge {
     tonic::include_proto!("winebridge");
 }
@@ -46,3 +50,9 @@ pub mod bottles {
 }
 
 pub const FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("bottles_descriptor");
+
+impl Display for Storefront {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self)
+    }
+}
