@@ -11,25 +11,115 @@ Bottles Next is split into several processes that talk to each other over
 these protocols:
 
 ```mermaid
-flowchart TB
+flowchart BT
     UI["next-ui"]
-    Server["next-server\nProfile · Accounts · Steam · Library · Bottle"]
+
+    Server["next-server\nProfile · Accounts · Steam\nLibrary · Plugin · Bottle"]
+
     Registry["next-registry\nbottles.registry.v1"]
-    EGS["next-plugin-egs\nbottles.plugin.v1"]
-    GOG["next-plugin-gog\nbottles.plugin.v1"]
-    OtherPlugin["next-plugin-*\nbottles.plugin.v1"]
+
+    NextCore["next-core\nCore library"]
+
+    subgraph Plugins["Plugins"]
+        direction TB
+        EGS["next-plugin-egs\nbottles.plugin.v1"]
+        GOG["next-plugin-gog\nbottles.plugin.v1"]
+        OtherPlugin["next-plugin-*\nbottles.plugin.v1"]
+    end
+
     WineBridge["WineBridge agent\n(inside a Wine prefix)"]
 
+    Server --> NextCore
+    UI --> NextCore
     UI -->|"next-server's own RPCs"| Server
+
     Server -->|"Resolve"| Registry
     EGS -->|"Register / Heartbeat / Deregister"| Registry
     GOG -->|"Register / Heartbeat / Deregister"| Registry
     OtherPlugin -->|"Register / Heartbeat / Deregister"| Registry
-    Server -->|"BeginLogin · CompleteLogin · RefreshSession\nRevokeSession · ListGames · WatchGames\nGetInstallManifest"| EGS
-    Server -.-> GOG
-    Server -.-> OtherPlugin
-    Server -->|"winebridge.proto\n(via next-core)"| WineBridge
+
+
+    Server --> WineBridge
 ```
+
+### RPCs per service
+
+```mermaid
+classDiagram
+    class Profile {
+        ListProfiles()
+        GetProfile()
+        CreateProfile()
+        DeleteProfile()
+        RenameProfile()
+        UpdateProfile()
+        GetActiveProfile()
+        ActivateProfile()
+        WatchActiveProfile() stream
+    }
+    class Accounts {
+        LinkProfile()
+        RefreshAccount()
+        UnlinkProfile()
+        ActivateAccounts()
+    }
+    class Steam {
+        LinkSteamAccount()
+        UnlinkSteamAccount()
+        WatchSteamSessions() stream
+    }
+    class Library {
+        ListGames()
+        WatchGames() stream
+        InstallGame() stream
+        CancelInstall()
+        UninstallGame()
+    }
+    class Plugin {
+        BeginLogin()
+        CompleteLogin()
+        RefreshSession()
+        RevokeSession()
+        ListGames()
+        WatchGames() stream
+        GetInstallManifest()
+    }
+    class Bottle {
+        CreateBottle() stream
+        DeleteBottle() stream
+        GetBottle()
+        ListBottles()
+        WatchBottles() stream
+        WatchBottle() stream
+        EditBottle()
+        SetComponent() stream
+        RemoveComponent() stream
+        InstallDependency() stream
+        RunProgram()
+        ListProcesses()
+        KillProcess()
+        StopBottle()
+        ListDllOverrides()
+        SetDllOverride()
+        UnsetDllOverride()
+        CreateSnapshot() stream
+        ListSnapshots()
+        Rollback() stream
+    }
+    class Registry {
+        RegisterPlugin()
+        Heartbeat()
+        DeregisterPlugin()
+        ResolvePlugin()
+        ListPlugins()
+    }
+```
+
+`Profile`, `Accounts`, `Steam`, `Library`, and `Bottle` are hosted by
+`next-server`. `Plugin` is implemented by each storefront plugin process
+(`next-plugin-egs`, `next-plugin-gog`, ...) and re-exposed by `next-server`
+as a forwarding facade with the same method set. `Registry` is hosted by
+`next-registry`. Methods marked `stream` are server-streaming RPCs.
 
 - **`bottles.registry.v1` (Registry)** — a small standalone process
   (`next-registry`) that lets out-of-process storefront plugins announce
@@ -60,6 +150,9 @@ flowchart TB
   - `Library` aggregates each linked storefront's `Plugin.ListGames`/
     `WatchGames` into one merged view, and drives installs via
     `Plugin.GetInstallManifest`.
+  - `Plugin` on `next-server` is a thin forwarding facade: it resolves the
+    right storefront plugin through `Registry` and passes the call through
+    unchanged, so callers don't need to dial `Registry` themselves.
   - `Bottle` is next-core's Wine-prefix lifecycle/configuration surface.
 
 - **`bottles.common.v1` (common)** — shared value types (`Storefront`,
