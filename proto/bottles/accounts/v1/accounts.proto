@@ -11,15 +11,28 @@ service Accounts {
   // existing link for the same storefront.
   rpc LinkProfile(LinkProfileRequest) returns (bottles.common.v1.LinkedAccount);
 
+  // Refreshes a single linked account's session with its owning plugin,
+  // without persisting the result to the profile — callers that want the
+  // update saved should use ActivateAccounts instead.
   rpc RefreshAccount(RefreshAccountRequest) returns (bottles.common.v1.LinkedAccount);
 
+  // Revokes the storefront session (best-effort) and removes the
+  // LinkedAccount from the profile.
   rpc UnlinkProfile(UnlinkProfileRequest) returns (google.protobuf.Empty);
+
+  // Refreshes credentials for a profile's linked accounts (all of them, or
+  // just `only` if given) via their owning plugins, persisting any updates.
+  // Distinct from Profile.ActivateProfile, which just marks a profile as
+  // the active one and doesn't touch storefront credentials.
+  rpc ActivateAccounts(ActivateAccountsRequest) returns (ActivateAccountsResponse);
 }
 
 message LinkProfileRequest {
   string profile_id = 1;
+  // The one-shot challenge id returned by Plugin.BeginLogin.
   string challenge_id = 2;
   bottles.common.v1.Storefront storefront = 3;
+  // The code/token the user was asked to paste back to complete login.
   string user_input = 4;
 }
 
@@ -31,4 +44,38 @@ message RefreshAccountRequest {
 message UnlinkProfileRequest {
   string profile_id = 1;
   bottles.common.v1.Storefront storefront = 2;
+}
+
+message ActivateAccountsRequest {
+  string profile_id = 1;
+  // Limits the refresh to these storefronts. Empty means "all of the
+  // profile's linked accounts".
+  repeated bottles.common.v1.Storefront only = 2;
+}
+
+message ActivateAccountsResponse {
+  // One entry per account that was considered, in no particular order.
+  repeated AccountActivationResult results = 1;
+}
+
+message AccountActivationResult {
+  bottles.common.v1.Storefront storefront = 1;
+  ActivationOutcome outcome = 2;
+  // Human-readable detail for non-success outcomes (e.g. the plugin error
+  // message). Empty on success.
+  string detail = 3;
+}
+
+enum ActivationOutcome {
+  ACTIVATION_OUTCOME_UNSPECIFIED = 0;
+  ACTIVATION_OUTCOME_SUCCESS = 1;
+  // The storefront was in `only` but isn't actually linked to the profile.
+  ACTIVATION_OUTCOME_NOT_LINKED = 2;
+  // The plugin was reached but refused/failed to refresh the session
+  // (e.g. the stored credential is no longer valid).
+  ACTIVATION_OUTCOME_CREDENTIAL_STALE = 3;
+  // No plugin is currently registered for this storefront.
+  ACTIVATION_OUTCOME_PLUGIN_UNAVAILABLE = 4;
+  // The plugin registry or the plugin itself couldn't be reached.
+  ACTIVATION_OUTCOME_NETWORK_ERROR = 5;
 }

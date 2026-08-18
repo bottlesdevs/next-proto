@@ -67,6 +67,8 @@ message Game {
   optional InstallState install_state = 13;
 }
 
+// Local install status for a Game, as tracked by Library — not catalog
+// data from the storefront itself.
 message InstallState {
   bool installed = 1;
   optional string bottle_id = 2;

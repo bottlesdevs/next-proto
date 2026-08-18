@@ -4,22 +4,37 @@ package bottles.steam.v1;
 
 import "google/protobuf/empty.proto";
 
+// Steam — local Steam session detection and linking. Unlike every other
+// storefront (bottles.plugin.v1), Steam is read directly off the local
+// install's loginusers.vdf rather than through an out-of-process plugin,
+// so it gets its own small service instead of going through Plugin/Accounts.
 service Steam {
+  // Links a locally-detected Steam account to a profile. Refuses if that
+  // Steam account is already linked to a different profile — a Steam
+  // account maps to one real person, so it shouldn't be claimable by more
+  // than one local profile at a time.
   rpc LinkSteamAccount(LinkSteamAccountRequest) returns (SteamLink);
 
   rpc UnlinkSteamAccount(UnlinkSteamAccountRequest) returns (google.protobuf.Empty);
 
+  // Server-streaming: fires whenever the OS-level Steam active user
+  // changes (detected via a filesystem watch on loginusers.vdf).
   rpc WatchSteamSessions(google.protobuf.Empty) returns (stream SteamSessionEvent);
 }
 
 message SteamLink {
   string steam_id64 = 1;
+  // Best-effort, looked up from the local loginusers.vdf; empty if Steam
+  // isn't installed or the id isn't found there.
   string account_name = 2;
 }
 
 message LinkSteamAccountRequest {
   string profile_id = 1;
   string steam_id64 = 2;
+  // Accepted for backwards compatibility with callers that used to get
+  // activation folded into this call; activation now happens through
+  // bottles.profiles.v1.Profile.ActivateProfile directly.
   bool auto_activate = 3;
 }
 
@@ -30,5 +45,7 @@ message UnlinkSteamAccountRequest {
 message SteamSessionEvent {
   string steam_id64 = 1;
   string account_name = 2;
+  // Steam only ever tracks one locally logged-in user at a time; mirrors
+  // the MostRecent flag it stores per loginusers.vdf entry.
   bool is_active = 3;
 }

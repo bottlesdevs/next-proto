@@ -7,6 +7,9 @@ import "bottles/steam/v1/steam.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
+// A local profile: an identity a person switches into to see their own
+// linked storefront/Steam accounts and library. Doesn't itself hold
+// credentials for those accounts — see bottles.accounts.v1.Accounts.
 message UserProfile {
   string id = 1;
   string name = 2;
@@ -35,8 +38,13 @@ service Profile {
 
   rpc GetActiveProfile(google.protobuf.Empty) returns (GetActiveProfileResponse);
 
-  rpc ActivateProfile(ActivateProfileRequest) returns (ActivateProfileResponse);
+  // Marks a profile as the active one. Doesn't touch storefront
+  // credentials — see bottles.accounts.v1.Accounts.ActivateAccounts for
+  // refreshing those.
+  rpc ActivateProfile(ActivateProfileRequest) returns (UserProfile);
 
+  // Server-streaming: subscribes to activation/update/delete events instead
+  // of polling.
   rpc WatchActiveProfile(google.protobuf.Empty) returns (stream ProfileEvent);
 }
 
@@ -63,38 +71,19 @@ message RenameProfileRequest {
 }
 
 message GetActiveProfileResponse {
+  // Unset if no profile has ever been activated (e.g. first run).
   optional UserProfile profile = 1;
 }
 
 message ActivateProfileRequest {
   string profile_id = 1;
-  repeated bottles.common.v1.Storefront only = 2;
-}
-
-message ActivateProfileResponse {
-  UserProfile profile = 1;
-  repeated AccountActivationResult results = 2;
-}
-
-message AccountActivationResult {
-  bottles.common.v1.Storefront storefront = 1;
-  ActivationOutcome outcome = 2;
-  string detail = 3;
-}
-
-enum ActivationOutcome {
-  ACTIVATION_OUTCOME_UNSPECIFIED = 0;
-  ACTIVATION_OUTCOME_SUCCESS = 1;
-  ACTIVATION_OUTCOME_NOT_LINKED = 2;
-  ACTIVATION_OUTCOME_CREDENTIAL_STALE = 3;
-  ACTIVATION_OUTCOME_PLUGIN_UNAVAILABLE = 4;
-  ACTIVATION_OUTCOME_NETWORK_ERROR = 5;
 }
 
 message ProfileEvent {
   oneof event {
     UserProfile activated = 1;
     UserProfile updated = 2;
+    // The id of a profile that was just deleted.
     string deleted_profile_id = 3;
   }
 }

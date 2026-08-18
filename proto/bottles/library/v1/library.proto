@@ -5,9 +5,14 @@ package bottles.library.v1;
 import "bottles/common/v1/common.proto";
 import "google/protobuf/empty.proto";
 
+// Library — a profile's owned/installed games, aggregated across every
+// storefront it has linked accounts for.
 service Library {
   rpc ListGames(ListGamesRequest) returns (ListGamesResponse);
 
+  // Server-streaming: fans out Plugin.WatchGames across every storefront
+  // the profile has linked and merges the results, so callers subscribe
+  // once instead of per-storefront.
   rpc WatchGames(WatchGamesRequest) returns (stream GameEvent);
 
   // Downloads a game via the owning storefront plugin's
@@ -53,6 +58,9 @@ message GameUpdated {
 }
 
 message GameRemoved {
+  // No longer owned/visible on the storefront (e.g. removed from the
+  // account's library) — distinct from UninstallGame, which only removes
+  // local install state and leaves ownership untouched.
   bottles.common.v1.Storefront storefront = 1;
   string game_id = 2;
 }
