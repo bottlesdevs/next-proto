@@ -31,6 +31,8 @@ service Profile {
 
   rpc RenameProfile(RenameProfileRequest) returns (UserProfile);
 
+  rpc UpdateProfile(UserProfile) returns (google.protobuf.Empty);
+
   rpc GetActiveProfile(google.protobuf.Empty) returns (GetActiveProfileResponse);
 
   rpc ActivateProfile(ActivateProfileRequest) returns (ActivateProfileResponse);

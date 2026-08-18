@@ -11,6 +11,8 @@ service Accounts {
   // existing link for the same storefront.
   rpc LinkAccount(LinkAccountRequest) returns (bottles.common.v1.LinkedAccount);
 
+  rpc RefreshAccount(RefreshAccountRequest) returns (bottles.common.v1.LinkedAccount);
+
   rpc UnlinkAccount(UnlinkAccountRequest) returns (google.protobuf.Empty);
 }
 
@@ -19,6 +21,11 @@ message LinkAccountRequest {
   string challenge_id = 2;
   bottles.common.v1.Storefront storefront = 3;
   string user_input = 4;
+}
+
+message RefreshAccountRequest {
+  string profile_id = 1;
+  bottles.common.v1.Storefront storefront = 2;
 }
 
 message UnlinkAccountRequest {
