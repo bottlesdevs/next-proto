@@ -13,6 +13,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .compile_protos(
             &[
                 "proto/winebridge.proto",
+                /* Disabled until we finish native bottles client
                 "proto/bottles/profiles/v1/profiles.proto",
                 "proto/bottles/plugin/v1/plugin.proto",
                 "proto/bottles/steam/v1/steam.proto",
@@ -21,6 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "proto/bottles/registry/v1/registry.proto",
                 "proto/bottles/common/v1/common.proto",
                 "proto/bottles/bottle/v1/bottle.proto",
+                 */
             ],
             &["proto/"],
         )?;
