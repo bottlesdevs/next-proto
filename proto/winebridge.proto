@@ -6,7 +6,11 @@ import "google/protobuf/empty.proto";
 
 service WineBridge {
     // Process Management
-    rpc ListProcesses(google.protobuf.Empty) returns (ListProcessesResponse);
+    rpc ListProcesses(ListProcessesRequest) returns (ProcessList);
+    // Streams the groups launched through WineBridge that have a running
+    // process: the current groups first, then the groups after every change.
+    // The stream ends when WineBridge exits.
+    rpc WatchGroups(google.protobuf.Empty) returns (stream RunningGroups);
     rpc LaunchProcess(LaunchProcessRequest) returns (LaunchProcessResponse);
     rpc KillProcess(KillProcessRequest) returns (google.protobuf.Empty);
 
@@ -55,10 +59,21 @@ message Process {
     uint32 pid = 1;
     string name = 2;
     uint32 threads = 3;
+    // Group passed to LaunchProcess, unset for processes outside every group.
+    optional string group = 4;
 }
 
-message ListProcessesResponse {
+message ListProcessesRequest {
+    // Group passed to LaunchProcess; unset lists every process in the prefix.
+    optional string group = 1;
+}
+
+message ProcessList {
     repeated Process processes = 1;
+}
+
+message RunningGroups {
+    repeated string ids = 1;
 }
 
 message LaunchProcessRequest {
